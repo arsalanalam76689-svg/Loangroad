@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>The Long Road: Warrior of the Five Banners</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=MedievalSharp&family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="game-container">
+    <canvas id="game-canvas"></canvas>
+
+    <!-- UI Overlay -->
+    <div id="ui-overlay">
+      <!-- Top HUD -->
+      <div class="hud-panel" id="hud-panel">
+        <!-- Health Bar -->
+        <div class="status-bar-container">
+          <span class="bar-icon">❤️</span>
+          <div class="bar-track">
+            <div id="health-bar-fill" class="bar-fill-health" style="width: 100%;"></div>
+          </div>
+          <span id="health-text" class="bar-text">100/100</span>
+        </div>
+
+        <!-- Hunger Bar -->
+        <div class="status-bar-container">
+          <span class="bar-icon">🍖</span>
+          <div class="bar-track">
+            <div id="hunger-bar-fill" class="bar-fill-hunger" style="width: 100%;"></div>
+          </div>
+          <span id="hunger-text" class="bar-text">100/100</span>
+        </div>
+
+        <!-- XP / Level Bar -->
+        <div class="status-bar-container">
+          <span class="bar-icon" id="level-badge" style="font-family:'Press Start 2P'; font-size:10px; color:#f1c40f;">L1</span>
+          <div class="bar-track">
+            <div id="xp-bar-fill" class="bar-fill-xp" style="width: 0%;"></div>
+          </div>
+          <span id="xp-text" class="bar-text">0/100</span>
+        </div>
+      </div>
+
+      <!-- Top Right Actions -->
+      <div class="top-right-panel interactive">
+        <div class="currency-badge">
+          <span>🪙</span>
+          <span id="gold-count">0</span>
+        </div>
+        <div class="currency-badge" style="border-color:#a08060; color:#ecd0b0;">
+          <span>🪵</span>
+          <span id="wood-count">0</span>
+        </div>
+        <button id="btn-inventory-open" class="btn-icon" title="Inventory (I)">🎒 Bag</button>
+        <button id="btn-quests-open" class="btn-icon" title="Quests (Q)">📜 Quests</button>
+        <button id="btn-map-open" class="btn-icon" title="World Map (M)">🗺️ Map</button>
+        <button id="btn-pause-open" class="btn-icon" title="Pause (Esc)">⚙️</button>
+      </div>
+
+      <!-- Active Quest Tracker (Upper Left) -->
+      <div class="quest-tracker" id="quest-tracker">
+        <div class="quest-tracker-title" id="quest-tracker-title">CHAPTER 1: A HUNGRY BEGINNING</div>
+        <div class="quest-tracker-desc" id="quest-tracker-desc">Speak to the Village Elder Oakhaven.</div>
+      </div>
+
+      <!-- Boss Health Bar -->
+      <div id="boss-bar-container">
+        <div class="boss-title" id="boss-name">LORD MALAKOR - SOVEREIGN OF THE FIVE BANNERS</div>
+        <div class="boss-track">
+          <div id="boss-bar-fill" class="boss-fill"></div>
+        </div>
+      </div>
+
+      <!-- Interaction Prompt -->
+      <div id="interact-prompt">[E] Interact</div>
+
+      <!-- Bottom Hotbar -->
+      <div class="hotbar-container interactive">
+        <div class="hotbar-slot" id="hotbar-1" title="Hotkey [1]: Roast Meat">
+          <span class="hotbar-slot-key">1</span>
+          <span class="hotbar-slot-icon">🍖</span>
+          <span class="hotbar-slot-count" id="hotbar-meat-count">0</span>
+        </div>
+        <div class="hotbar-slot" id="hotbar-2" title="Hotkey [2]: Health Potion">
+          <span class="hotbar-slot-key">2</span>
+          <span class="hotbar-slot-icon">🧪</span>
+          <span class="hotbar-slot-count" id="hotbar-potion-count">0</span>
+        </div>
+        <div class="hotbar-slot" id="hotbar-3" title="Hotkey [3]: Elixir of Vigor">
+          <span class="hotbar-slot-key">3</span>
+          <span class="hotbar-slot-icon">✨</span>
+          <span class="hotbar-slot-count" id="hotbar-elixir-count">0</span>
+        </div>
+        <div class="hotbar-slot" id="hotbar-4" title="Hotkey [4]: Teleport to Greenmeadow">
+          <span class="hotbar-slot-key">4</span>
+          <span class="hotbar-slot-icon">🧿</span>
+          <span class="hotbar-slot-count" id="hotbar-teleport-count">1</span>
+        </div>
+      </div>
+
+      <!-- Toast Notifications -->
+      <div id="toast-container"></div>
+
+      <!-- Touch Controls (Mobile) -->
+      <div id="touch-controls">
+        <div class="joystick-base" id="touch-joystick">
+          <div class="joystick-thumb" id="touch-thumb"></div>
+        </div>
+        <div class="touch-actions">
+          <button class="touch-btn" id="touch-dodge">ROLL</button>
+          <button class="touch-btn" id="touch-guard">BLOCK</button>
+          <button class="touch-btn" id="touch-attack" style="width:64px;height:64px;background:#c0392b;">ATK</button>
+          <button class="touch-btn" id="touch-interact" style="background:#27ae60;">E</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Title Screen -->
+    <div id="title-screen">
+      <div class="game-logo">
+        <div class="logo-sub">AN ACTION-SURVIVAL RPG</div>
+        <h1 class="logo-main">THE LONG ROAD<br><span style="font-size:0.7em; color:#e67e22;">WARRIOR OF THE FIVE BANNERS</span></h1>
+      </div>
+      <div class="title-menu interactive">
+        <button id="btn-new-game" class="btn-primary">⚔️ New Game</button>
+        <button id="btn-continue-game" class="btn-primary" style="display:none;">🛡️ Continue Game</button>
+        <button id="btn-title-settings" class="btn-primary">⚙️ Settings</button>
+        <button id="btn-title-credits" class="btn-primary">📜 Credits</button>
+      </div>
+      <div class="controls-hint">
+        WASD Move &middot; J / Left Click Attack &middot; K Guard &middot; Space Dodge<br>
+        E Interact &middot; I Inventory &middot; Q Quests &middot; M Map &middot; Esc Pause
+      </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Dialogue Modal -->
+    <div id="dialogue-modal" class="modal-overlay interactive" style="display:none;">
+      <div class="modal-content" style="max-width:540px;">
+        <div class="modal-header">
+          <div class="modal-title" id="npc-name">Elder Oakhaven</div>
+          <button class="btn-close" id="btn-dialogue-close">X</button>
+        </div>
+        <div id="npc-dialogue-text" style="font-size:16px; line-height:1.5; color:#f1f2f6; margin-bottom:18px;">
+          Greetings, young Warrior! Our settlement has endured through dark times...
+        </div>
+        <div id="npc-action-buttons" style="display:flex; gap:10px; justify-content:flex-end;">
+          <button class="btn-primary" id="btn-dialogue-action" style="padding:8px 16px; font-size:15px;">Accept</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Skins Shop Modal -->
+    <div id="skin-shop-modal" class="modal-overlay interactive" style="display:none;">
+      <div class="modal-content" style="max-width:640px;">
+        <div class="modal-header">
+          <div class="modal-title">🎨 Warrior Clothier Shop</div>
+          <button class="btn-close" id="btn-skin-shop-close">X</button>
+        </div>
+        <p style="color:#bdc3c7; font-size:14px; margin-bottom:16px;">
+          Choose your banner color. Each warrior skin features custom combat and walking animations!
+        </p>
+        <div id="skins-list" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr)); gap:12px;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Equipment Shop Modal -->
+    <div id="equip-shop-modal" class="modal-overlay interactive" style="display:none;">
+      <div class="modal-content" style="max-width:640px;">
+        <div class="modal-header">
+          <div class="modal-title">⚔️ Eldrin's Armory & Upgrades</div>
+          <button class="btn-close" id="btn-equip-shop-close">X</button>
+        </div>
+        <p style="color:#bdc3c7; font-size:14px; margin-bottom:16px;">
+          Sharpen your blade and forge sturdy armor to survive the perilous road ahead.
+        </p>
+        <div id="equip-items-list" style="display:flex; flex-direction:column; gap:10px;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory Modal -->
+    <div id="inventory-modal" class="modal-overlay interactive" style="display:none;">
+      <div class="modal-content" style="max-width:580px;">
+        <div class="modal-header">
+          <div class="modal-title">🎒 Inventory & Equipment</div>
+          <button class="btn-close" id="btn-inventory-close">X</button>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+          <div style="background:#14110e; border:1px solid #4a3827; border-radius:6px; padding:12px;">
+            <div style="font-family:'Press Start 2P'; font-size:10px; color:#f1c40f; margin-bottom:8px;">HERO STATS</div>
+            <div style="font-size:14px; line-height:1.6;" id="inventory-stats">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+          <div style="background:#14110e; border:1px solid #4a3827; border-radius:6px; padding:12px;">
+            <div style="font-family:'Press Start 2P'; font-size:10px; color:#f1c40f; margin-bottom:8px;">EQUIPMENT</div>
+            <div style="font-size:14px; line-height:1.6;" id="inventory-equipment">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+        <div style="font-family:'Press Start 2P'; font-size:10px; color:#f1c40f; margin-bottom:8px;">BAG ITEMS (Click item to Use / Eat)</div>
+        <div id="inventory-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(70px, 1fr)); gap:8px;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Quests Journal Modal -->
+    <div id="quests-modal" class="modal-overlay interactive" style="display:none;">
+      <div class="modal-content" style="max-width:640px;">
+        <div class="modal-header">
+          <div class="modal-title">📜 Quest Journal (24 Chapters)</div>
+          <button class="btn-close" id="btn-quests-close">X</button>
+        </div>
+        <div style="display:flex; gap:10px; margin-bottom:14px;">
+          <button class="btn-primary" id="tab-active-quests" style="padding:6px 14px; font-size:13px;">Active Quests</button>
+          <button class="btn-primary" id="tab-completed-quests" style="padding:6px 14px; font-size:13px; opacity:0.6;">Completed</button>
+          <button class="btn-primary" id="tab-bounties" style="padding:6px 14px; font-size:13px; opacity:0.6;">Bounties</button>
+        </div>
+        <div id="quests-list" style="display:flex; flex-direction:column; gap:10px; max-height:55vh; overflow-y:auto;">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- World Map Modal -->
+    <div id="map-modal" class="modal-overlay interactive" style="display:none;">
+      <div class="modal-content" style="max-width:700px;">
+        <div class="modal-header">
+          <div class="modal-title">🗺️ Realm of the Five Banners</div>
+          <button class="btn-close" id="btn-map-close">X</button>
+        </div>
+        <canvas id="world-map-canvas" width="650" height="380" style="width:100%; height:auto; border:2px solid #574635; border-radius:6px; background:#0b1d28;"></canvas>
+        <div style="margin-top:12px; display:flex; justify-content:space-between; align-items:center; font-size:13px; color:#bdc3c7;">
+          <span>🟢 Greenmeadow &middot; 🌲 Wilds &middot; 🌊 Riverlands &middot; 🔴 Red Frontier &middot; ⬛ Blackstone</span>
+          <span id="map-current-region" style="color:#f1c40f; font-weight:bold;">Region: Greenmeadow</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pause Menu Modal -->
+    <div id="pause-modal" class="modal-overlay interactive" style="display:none;">
+      <div class="modal-content" style="max-width:380px; text-align:center;">
+        <div class="modal-header" style="justify-content:center;">
+          <div class="modal-title">GAME PAUSED</div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:10px; margin:20px 0;">
+          <button class="btn-primary" id="btn-pause-resume">▶️ Resume</button>
+          <button class="btn-primary" id="btn-pause-save">💾 Save Game</button>
+          <button class="btn-primary" id="btn-pause-settings">⚙️ Settings</button>
+          <button class="btn-primary" id="btn-pause-title">🏠 Title Screen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal-overlay interactive" style="display:none;">
+      <div class="modal-content" style="max-width:440px;">
+        <div class="modal-header">
+          <div class="modal-title">⚙️ Audio & Settings</div>
+          <button class="btn-close" id="btn-settings-close">X</button>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:16px; margin:16px 0;">
+          <label style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Sound Effects Volume:</span>
+            <input type="range" id="slider-sfx" min="0" max="1" step="0.05" value="0.8">
+          </label>
+          <label style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Ambient Music Volume:</span>
+            <input type="range" id="slider-music" min="0" max="1" step="0.05" value="0.5">
+          </label>
+          <label style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Mute All Audio:</span>
+            <input type="checkbox" id="chk-mute" style="width:20px;height:20px;">
+          </label>
+        </div>
+        <div style="display:flex; justify-content:flex-end;">
+          <button class="btn-primary" id="btn-settings-done" style="padding:6px 16px;">Done</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Victory Modal -->
+    <div id="victory-modal" class="modal-overlay interactive" style="display:none;">
+      <div class="modal-content" style="max-width:560px; text-align:center; border-color:#f1c40f;">
+        <div class="modal-title" style="font-size:28px; margin-bottom:12px;">🏆 VICTORY! 🏆</div>
+        <h3 style="color:#e67e22; margin-bottom:16px; font-family:'Cinzel', serif;">LORD MALAKOR HAS FALLEN</h3>
+        <p style="font-size:15px; line-height:1.6; color:#ecf0f1; margin-bottom:20px;">
+          The Five Banners are united once more under your steadfast blade.
+          Peace returns to Greenmeadow and the wild realms!
+        </p>
+        <div style="background:#14110e; border:1px solid #574635; border-radius:6px; padding:14px; margin-bottom:20px; text-align:left; font-size:14px; line-height:1.7;" id="victory-stats">
+          <!-- Populated by JS -->
+        </div>
+        <div style="display:flex; gap:12px; justify-content:center;">
+          <button class="btn-primary" id="btn-victory-continue">🗺️ Continue Exploring</button>
+          <button class="btn-primary" id="btn-victory-title">🏠 Title Screen</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="gameover-modal" class="modal-overlay interactive" style="display:none;">
+      <div class="modal-content" style="max-width:440px; text-align:center; border-color:#c0392b;">
+        <div class="modal-title" style="color:#e74c3c; font-size:26px; margin-bottom:10px;">DEFEAT</div>
+        <p style="color:#ecf0f1; font-size:15px; margin-bottom:20px;">
+          You have fallen in battle. Take heart, brave warrior!
+        </p>
+        <button class="btn-primary" id="btn-respawn" style="background:#c0392b; border-color:#e74c3c;">Respawn at Settlement</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
